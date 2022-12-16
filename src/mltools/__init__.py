@@ -46,9 +46,9 @@ def aussys_thres_report(predict_proba, expected, threshold, mission_duration, ca
     nosea_fnr = int(nosea_image_exp * ta[1])
     
     if print_mode == True:
-        print('>>> ESPERANÇA:')
-        print('- Identificar um `no sea` de forma equivocada:', sea_fpr)
-        print('- Um `no sea` passar despercebido:', nosea_fnr)
+        print('>>> REPORT:')
+        print(f'- Espera-se que {sea_fpr} imagens `no sea` sejam identificadas de forma equivocada.')
+        print(f'- Estima-se que {nosea_fnr} imagens `no sea` deverão passar despercebidas.')
         
         return
     
