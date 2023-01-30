@@ -96,14 +96,14 @@ def aussys_rb_images(predict_proba, expected, mission_duration, captures_per_sec
     if (print_mode == True) and (sea_fpr is not None):
         print('>>> RELATÓRIO SEA FPR:')
         print(f'- Dado que podem ser aceitas até {sea_fpr} imagens `no sea` identificadas de forma equivocadas,') 
-        print(f'convêm-se utilizar um threshold de {threshold},')
-        print(f'e espera-se que {nosea_fnr_t} imagens passem despercebidas.\n')
+        print(f'convêm-se utilizar um threshold de {sea_fpr_res[1]},')
+        print(f'e espera-se que {sea_fpr_res[0]} imagens passem despercebidas.\n')
         
     if (print_mode == True) and (nosea_fnr is not None):
         print('>>> RELATÓRIO NOSEA FNR:')
         print(f'- Dado que podem ser aceitas até {nosea_fnr} imagens `no sea` passarem despercebidas,')
-        print(f'convêm-se utilizar um threshold de {threshold},')
-        print(f'e espera-se que {sea_fpr_t} imagens sejam identificadas de forma equivocadas.\n')
+        print(f'convêm-se utilizar um threshold de {nosea_fnr_res[1]},')
+        print(f'e espera-se que {nosea_fnr_res[0]} imagens sejam identificadas de forma equivocadas.\n')
         
     if (sea_fpr is not None) and (nosea_fnr is not None) and (print_mode==False):
         return np.array([sea_fpr_res, nosea_fnr_res])   
