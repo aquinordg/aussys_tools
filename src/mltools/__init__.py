@@ -4,13 +4,17 @@ from sklearn.metrics import confusion_matrix
 
 def threshold_analysis(predict_proba, expected, threshold):
     """
+    
+    Function used by another function (`aussys_rb_thres`)
+    
     Parameters:
     `predict_proba` float array(m): probability of belonging to target class
     `expected` boolean array(m): state of target class to label
     `threshold` float[0,1]: threshold
     
     Return:
-    `FPR(fall-out), FNR(miss rate)`: array
+    `FPR`(fall-out) float[0,1]: False Positive Rate
+    `FNR`(miss rate) float[0,1]: False Negative Rate
     
     """
     
@@ -24,24 +28,34 @@ def threshold_analysis(predict_proba, expected, threshold):
     
 def aussys_rb_thres(predict_proba, expected, threshold, mission_duration, captures_per_second, sea_nosea_ratio, print_mode=True):
     """
+    
+    Aussys report by threshold
+    
+    This function informs the misidentified `no sea` and
+    unidentified `no sea` images given a threshold. For this
+    is required a probability array of belonging and the
+    expected values of the class. Also, mission information and
+    parameters are required. The results can be shown by printed report or
+    just values.
+    
     Parameters:
     `predict_proba` float array(m): probability of belonging to target class
     `expected` boolean array(m): state of target class to label
     `threshold` float[0,1]: threshold
     
-    `mission_duration` model: duration of mission
+    `mission_duration` int: duration of mission in seconds
     `captures_per_second` int: number of captures per second
     `sea_nosea_ratio` float[0,1]: sea/nosea ratio
-    `print_mode` int: report or just values
+    `print_mode` int: report or values
     
-    Return:
-    `sea_fpr, nosea_fnr`: array
+    Return:    
+    `sea_fpr` int: misidentified `no sea` images
+    `nosea_fnr` int: unidentified `no sea` images
     
     """
     ratio = sea_nosea_ratio/(sea_nosea_ratio + 1)
     sea_image_exp = (1 - ratio) * (mission_duration * captures_per_second)
     nosea_image_exp =  ratio * (mission_duration * captures_per_second)
-
     
     FPR, FNR = threshold_analysis(predict_proba, expected, threshold)
     
@@ -60,7 +74,24 @@ def aussys_rb_thres(predict_proba, expected, threshold, mission_duration, captur
         return sea_fpr, nosea_fnr
 
 def get_rates_b_thres(predict_proba, expected, rate_type, ref, sen):
+    """
+    
+    Function used by another function (`aussys_rb_images`)
+    
+    Parameters:
+    `predict_proba` float array(m): probability of belonging to target class
+    `expected` boolean array(m): state of target class to label
+    
+    `rate_type` string: 'FPR' for False Positive Rate or 'FNR' for False Negative Rate
+    `ref` model: FPR or FNR reference values to the search
+    `sen` int: sensibility, directly proportional to method accuracy and processing time
 
+    Return:
+    `FPR_t` float: new value of FPR_t
+    `FNR_t` float: new value of FNR_t
+    `threshold` float: new value of threshold
+    
+    """
     for threshold in np.arange(0, 1, 10**(-sen)):
         predicted = (predict_proba > threshold)
         cm = confusion_matrix(expected, predicted)
@@ -76,7 +107,36 @@ def get_rates_b_thres(predict_proba, expected, rate_type, ref, sen):
     return FPR_t, FNR_t, threshold
 
 def aussys_rb_images(predict_proba, expected, mission_duration, captures_per_second, sea_nosea_ratio, sen, sea_fpr=None, nosea_fnr=None, print_mode=True):
+    """
     
+    Aussys report by images
+    
+    This function informs new values for acceptable misidentified `no sea` or
+    unidentified `no sea` images including a suitable threshold.
+    For this is required a probability array of belonging and the
+    expected values of the class. Also, mission information and
+    parameters are required. The method find the new threshold
+    by a greedy search in all possible scenarios using determined sensibility.
+    The results can be shown by printed report or just values.
+    
+    Parameters:
+    `predict_proba` float array(m): probability of belonging to target class
+    `expected` boolean array(m): state of target class to label
+    
+    `mission_duration` int: duration of mission in seconds
+    `captures_per_second` int: number of captures per second
+    `sea_nosea_ratio` float[0,1]: sea/nosea ratio
+    
+    `sen` int: sensibility, directly proportional to method accuracy and processing time
+    `sea_fpr` int: misidentified `no sea` images (desired)
+    `nosea_fnr` int: unidentified `no sea` images (desired)
+    
+    `print_mode` int: report or values
+
+    Return:
+    `sea_fpr_res, nosea_fnr_res` array: new values for sea_fpr and nosea_fnr, both with threshold
+    
+    """
     ratio = sea_nosea_ratio/(sea_nosea_ratio + 1)
     sea_image_exp = (1 - ratio) * (mission_duration * captures_per_second)
     nosea_image_exp = ratio * (mission_duration * captures_per_second)
