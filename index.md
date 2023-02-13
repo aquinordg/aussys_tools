@@ -1,102 +1,129 @@
-# Package rdga_4k
+# Package mltools
 
-Python package [rdga_4k](https://github.com/aquinordg/rdga_4k): Random Data Generator Algorithm for Clustering.
+Python package [mltools](https://github.com/aquinordg/mltools): Machine Learning Tools.
 
-The package generates synthetic data for applications in clustering algorithms.
+Essa ferramenta auxilia a análise e tomada de decisão em cenários de classificação binária, especialmente em aplicações de detecção de objetos a deriva no mar.
 
-## Functions
+## Instalação
 
-### Categorical Binary Random Data
 ```markdown
-
-catbird(m, n, k, lmbd=0.5, eps=0.5, random_state=None)
-
+pip install git+https://github.com/aquinordg/mltools.git
 ```
-Generates random categorical binary data with _m_ examples (rows), _n_ attributes (columns), for _k_ clusters. The algorithm divides the number of examples into equal amounts within each of the clusters.
 
-Given s = n//2 + 1, the construction of the databases, the process is divided into three phases:
+## Funções
 
-- We filled in _s_ features, obtained from the multiplication of a single probability matrix, for each cluster, and a array, for each example. Both the matrix and the array values are obtained from gaussian distributions.
+### Relatório baseado em limiar de probabilidade
 
-- The remaining _n - s_ features are filled using the _eps_ interference value. Examples within each cluster receive interference in the same positions, uniquely.
+Esta função informa a quantidade de imagens 'no sea' identificadas de forma equivocadas e despercebidas, dado determinado limiar de probabilidade estabelecido como parâmetro. Para isso, a função utiliza uma matriz de probabilidade de pertencimento e os valores esperados, dada determinada classe, além de algumas informações da missão. Os resultados podem ser mostrados por relatório impresso em tela ou adquiridos de forma direta. 
 
-- In this way, we apply a sigmoid function to the database and convert it to the binary base, given the probability _lmbd_. Where we associate 1 to values smaller than the parameter.
+#### Chamada
 
+```markdown
+from mltools import aussys_rb_thres
+```
 
-#### Parameters
-
-**m**: _int_<br/>
-Number of examples or rows.
-
-**n**: _int_<br/>
-Number of features or columns.
-
-**k**: _int_<br/>
-Number of clusters.
-
-**lmbd**: _float in range [0.0, 1.0]_<br/>
-Reference probability used in the transformation to the binary base of the database, after applying the sigmoid function.
-
-**eps**: _float in range [0.0, 1.0]_<br/>
-Interference used in the particularization of clusters, before the application of the sigmoid function and the transformation to the binary base.
-
-**random_state**: _int or None_<br/>
-Random generator seed, useful for creating reproducible databases.
-
-#### _Returns_
-
-**data**: _array-like of shape (m, n)_<br/>
-Output database.
-
-**labels**: _array-like of shape (1, m)_<br/>
-Output database labels.
-
-####  Example
+#### Aplicação
 
 ```markdown
 
-catbird(m=5, n=3, k=2)
+aussys_rb_thres(predict_proba,
+                expected,
+                threshold,
+                mission_duration,
+                captures_per_second,
+                sea_nosea_ratio,
+                print_mode=True)
 
 ```
-_**Cluster 0**_
 
-_Cluster matrix (W0):_ [[2.46 1.38], [0.34 1.02]]<br/>
-_Example array * cluster matrix (A0 * W0):_ [0.16 1.65] * [[2.46 1.38], [0.34 1.02]] = [0.98, 1.92]<br/>
-_A0 * W0 with eps after sigmoid function:_ [0.50, 0.72, 0.87]<br/>
-_A0 * W0 after binarization:_ [0, 0, 0]<br/>
+#### Parâmetros
 
-_Cluster matrix (W0):_ [[2.46 1.38], [0.34 1.02]]<br/>
-_Example array * cluster matrix (A1 * W0):_ [ 0.66 -0.22] * [[2.46 1.38], [0.34 1.02]] = [1.56, 0.68]<br/>
-_A1 * W0 with eps after sigmoid function:_ [0.5, 0.82, 0.66]<br/>
-_A1 * W0 after binarization:_ [0, 0, 0]<br/>
+**predict_proba**: _array-like of float in range [0.0, 1.0] and shape m_<br/>
+Probabilidades dos exemplos pertencerem à classe alvo.
 
-_Cluster matrix (W0):_ [[2.46 1.38], [0.34 1.02]]<br/>
-_Example array * cluster matrix (A2 * W0):_ [-1.12 -0.63] * [[2.46 1.38], [0.34 1.02]] = [-3.00, -2.21]<br/>
-_A2 * W0 with eps after sigmoid function:_ [0.5, 0.04, 0.09]<br/>
-_A2 * W0 after binarization:_ [0, 1, 1]<br/>
+**expected**: _array-like of bool and shape m_<br/>
+Vetor booleano de dimensão m: classes esperadas de cada um dos exemplos.
 
-_**Cluster 1**_
+**threshold**: _float in range [0.0, 1.0]_<br/>
+Limiar de probabilidade de pertencimento definido pelo usuário.
 
-_Cluster matrix (W1):_ [[0.31 -1.22], [-0.22  1.33]]<br/>
-_Example array * cluster matrix (A3 * W1):_ [0.02 1.98] * [[0.31 -1.22], [-0.22  1.33]] = [-0.43, 2.62]<br/>
-_A3 * W1 with eps after sigmoid function:_ [0.39, 0.93, 0.5]<br/>
-_A3 * W1 after binarization:_ [1, 0, 0]  
+**mission_duration**: _int_<br/>
+Duração da missão em segundos.
 
-_Cluster matrix (W1):_ [[2.46 1.38], [0.34 1.02]]<br/>
-_Example array * cluster matrix (A4 * W1):_ [ 1.44  -0.28] * [[0.31 -1.22], [-0.22  1.33]] = [0.51, -2.15]<br/>
-_A4 * W1 with eps after sigmoid function:_ [0.62, 0.10, 0.5]<br/>
-_A4 * W1 after binarization:_ [0, 1, 0]<br/>
+**captures_per_second**: _int_<br/>
+Número de capturas por segundo.
 
-**data:** [[0, 0, 0], [0, 0, 0], [0, 1, 1], [1, 0, 0], [0, 1, 0]]
+**sea_nosea_ratio**: _float in range [0.0, 1.0]_<br/>
+Relação ‘sea/no sea’.
 
-**labels:** [0 0 0 1 1]
+**print_mode**: _bool_<br/>
+Relatório em tela (True) ou valores diretos (False).
 
-#### Install
+#### _Retornos_
+
+**sea_fpr**: _int_<br/>
+Quantidade de imagens 'no sea' identificadas de forma equivocada.
+
+**nosea_fnr**: _int_<br/>
+Total de imagens 'no sea' que deverão passar despercebidas.
+
+### Relatório baseado na quantidade de imagens
+
+Esta função informa quantidades atualizadas de imagens 'nosea' identificadas de forma equivocada ou passadas despercebidas consideradas aceitáveis e o limiar adequado, conforme a entrada escolhida. Assim como a função anterior, é utilizada a matriz de probabilidade de pertencimento e os valores esperados, dada determinada classe, além de algumas informações da missão. O método encontra o novo limiar por meio de uma busca gulosa em todos os cenários possíveis a partir de um parâmetro sensibilidade. Os resultados podem ser mostrados por relatório impresso em tela ou adquiridos de forma direta.
+
+#### Chamada
 
 ```markdown
-pip install git+https://github.com/aquinordg/rdga_4k.git
+from mltools import aussys_rb_images
 ```
 
-#### Contact us
+#### Aplicação
+```markdown
 
-E-mail: aquinordga@gmail.com
+aussys_rb_images(predict_proba,
+                 expected,
+                 mission_duration,
+                 captures_per_second,
+                 sea_nosea_ratio,
+                 sen,
+                 sea_fpr=None,
+                 nosea_fnr=None,
+                 print_mode=True)
+
+```
+#### Parâmetros
+
+**predict_proba**: _array-like of float in range [0.0, 1.0] and shape m_<br/>
+Probabilidades dos exemplos pertencerem à classe alvo.
+
+**expected**: _array-like of bool and shape m_<br/>
+Vetor booleano de dimensão m: classes esperadas de cada um dos exemplos.
+
+**mission_duration**: _int_<br/>
+Duração da missão em segundos.
+
+**captures_per_second**: _int_<br/>
+Número de capturas por segundo.
+
+**sea_nosea_ratio**: _float in range [0.0, 1.0]_<br/>
+Relação ‘sea/no sea’.
+
+**sen**: _float in range [0.0, 1.0]_<br/>
+Sensibilidade, diretamente proporcional à precisão do método e tempo de processamento.
+
+**sea_fpr**: _int_<br/>
+Quantidade de imagens ‘no sea’ em que é aceitável serem identificadas de forma equivocada.
+
+**nosea_fnr**: _int_<br/>
+Total de imagens ‘no sea’ em que é aceitável passarem despercebidas.
+
+**print_mode**: _bool_<br/>
+Relatório em tela (True) ou valores diretos (False).
+
+#### _Retornos_
+
+**new_sea_fpr, threshold**: _array-like_<br/>
+Quantidade de imagens ‘no sea’ identificadas de forma equivocada, dado o valor ‘nosea_fnr’ indicado e o respectivo valor de limiar adequado.
+
+**new_nosea_fnr, threshold**: _array-like_<br/>
+Total de imagens ‘no sea’ que deverão passar despercebidas, dado o valor de ‘sea_fpr’ indicado e o limiar adequado.
