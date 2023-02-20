@@ -26,7 +26,7 @@ def threshold_analysis(predict_proba, expected, threshold):
 
     return FPR, FNR
     
-def aussys_rb_thres(predict_proba, expected, threshold, mission_duration, captures_per_second, sea_nosea_ratio, print_mode=True):
+def aussys_rb_thres(predict_proba, expected, mission_duration, captures_per_second, n_sea_exp, threshold, print_mode=True):
     """
     
     Aussys report by threshold
@@ -41,11 +41,13 @@ def aussys_rb_thres(predict_proba, expected, threshold, mission_duration, captur
     Parameters:
     `predict_proba` float array(m): probability of belonging to target class
     `expected` boolean array(m): state of target class to label
-    `threshold` float[0,1]: threshold
     
     `mission_duration` int: duration of mission in seconds
     `captures_per_second` int: number of captures per second
-    `sea_nosea_ratio` float[0,1]: sea/nosea ratio
+    `n_sea_exp` int: expected number of 'sea' images for 1 'nosea'.  Ex.: 1(nosea):n_sea_exp
+    
+    `threshold` float[0,1]: threshold
+    
     `print_mode` int: report or values
     
     Return:    
@@ -53,7 +55,7 @@ def aussys_rb_thres(predict_proba, expected, threshold, mission_duration, captur
     `nosea_fnr` int: unidentified `no sea` images
     
     """
-    ratio = sea_nosea_ratio/(sea_nosea_ratio + 1)
+    ratio = n_sea_exp/(n_sea_exp + 1)
     sea_image_exp = (1 - ratio) * (mission_duration * captures_per_second)
     nosea_image_exp =  ratio * (mission_duration * captures_per_second)
     
@@ -73,7 +75,7 @@ def aussys_rb_thres(predict_proba, expected, threshold, mission_duration, captur
     
         return sea_fpr, nosea_fnr
 
-def get_rates_b_thres(predict_proba, expected, rate_type, ref, sen):
+def get_rates_b_thres(predict_proba, expected, rate_type, ref):
     """
     
     Function used by another function (`aussys_rb_images`)
@@ -84,7 +86,6 @@ def get_rates_b_thres(predict_proba, expected, rate_type, ref, sen):
     
     `rate_type` string: 'FPR' for False Positive Rate or 'FNR' for False Negative Rate
     `ref` model: FPR or FNR reference values to the search
-    `sen` int: sensibility, directly proportional to method accuracy and processing time
 
     Return:
     `FPR_t` float: new value of FPR_t
@@ -92,21 +93,21 @@ def get_rates_b_thres(predict_proba, expected, rate_type, ref, sen):
     `threshold` float: new value of threshold
     
     """
-    for threshold in np.arange(0, 1, 10**(-sen)):
+    for threshold in np.arange(1, 0, -10**(-2)):
         predicted = (predict_proba > threshold)
         cm = confusion_matrix(expected, predicted)
-        FPR_t = round(1 - (cm[0, 0]/sum(cm[0, :])), sen)
-        FNR_t = round(1 - (cm[1, 1]/sum(cm[1, :])), sen)
+        FPR_t = round(1 - (cm[0, 0]/sum(cm[0, :])), 2)
+        FNR_t = round(1 - (cm[1, 1]/sum(cm[1, :])), 2)
         
-        if (rate_type == "FPR") and (FPR_t <= ref):
+        if (rate_type == "FPR") and (FPR_t >= ref):
             break
             
-        if (rate_type == "FNR") and (FNR_t >= ref):
+        if (rate_type == "FNR") and (FNR_t <= ref):
             break
     
     return FPR_t, FNR_t, threshold
 
-def aussys_rb_images(predict_proba, expected, mission_duration, captures_per_second, sea_nosea_ratio, sen, sea_fpr=None, nosea_fnr=None, print_mode=True):
+def aussys_rb_images(predict_proba, expected, mission_duration, captures_per_second, n_sea_exp, sea_fpr=None, nosea_fnr=None, print_mode=True):
     """
     
     Aussys report by images
@@ -125,9 +126,8 @@ def aussys_rb_images(predict_proba, expected, mission_duration, captures_per_sec
     
     `mission_duration` int: duration of mission in seconds
     `captures_per_second` int: number of captures per second
-    `sea_nosea_ratio` float[0,1]: sea/nosea ratio
+    `n_sea_exp` int: expected number of 'sea' images for 1 'nosea'.  Ex.: 1(nosea):n_sea_exp
     
-    `sen` int: sensibility, directly proportional to method accuracy and processing time
     `sea_fpr` int: misidentified `no sea` images (desired)
     `nosea_fnr` int: unidentified `no sea` images (desired)
     
@@ -137,21 +137,21 @@ def aussys_rb_images(predict_proba, expected, mission_duration, captures_per_sec
     `sea_fpr_res, nosea_fnr_res` array: new values for sea_fpr and nosea_fnr, both with threshold
     
     """
-    ratio = sea_nosea_ratio/(sea_nosea_ratio + 1)
+    ratio = n_sea_exp/(n_sea_exp + 1)
     sea_image_exp = (1 - ratio) * (mission_duration * captures_per_second)
     nosea_image_exp = ratio * (mission_duration * captures_per_second)
         
     if sea_fpr is not None:
-        FPR = round(sea_fpr/sea_image_exp, sen)
-        FPR_t, FNR_t, threshold = get_rates_b_thres(predict_proba, expected, rate_type='FPR', ref=FPR, sen=sen)
+        FPR = round(sea_fpr/sea_image_exp, 2)
+        FPR_t, FNR_t, threshold = get_rates_b_thres(predict_proba, expected, rate_type='FPR', ref=FPR)
         nosea_fnr_t = int(nosea_image_exp * FNR_t)
-        sea_fpr_res = [nosea_fnr_t, threshold]
+        sea_fpr_res = [nosea_fnr_t, round(threshold, 2)]
         
     if nosea_fnr is not None:
-        FNR = round(nosea_fnr/nosea_image_exp, sen)
-        FPR_t, FNR_t, threshold = get_rates_b_thres(predict_proba, expected, rate_type='FNR', ref=FNR, sen=sen)
+        FNR = round(nosea_fnr/nosea_image_exp, 2)
+        FPR_t, FNR_t, threshold = get_rates_b_thres(predict_proba, expected, rate_type='FNR', ref=FNR)
         sea_fpr_t = int(sea_image_exp * FPR_t)
-        nosea_fnr_res = [sea_fpr_t, threshold]
+        nosea_fnr_res = [sea_fpr_t, round(threshold, 2)]
         
     if (print_mode == True) and (sea_fpr is not None):
         print('>>> RELATÓRIO SEA FPR:')
@@ -166,31 +166,4 @@ def aussys_rb_images(predict_proba, expected, mission_duration, captures_per_sec
         print(f'e espera-se que {nosea_fnr_res[0]} imagens sejam identificadas de forma equivocadas.\n')
         
     if (sea_fpr is not None) and (nosea_fnr is not None) and (print_mode==False):
-        return np.array([sea_fpr_res, nosea_fnr_res])   
-
-def threshold_analysis_gen(X, y, tss, model, idc, thr, random_state):
-    """
-    Parameters:
-    `X` array(m, n): data
-    `y` array(m): labels
-    `tss` float[0,1]: train test split
-    `model` model: sklearn model
-    `idc` int: index of class to be analyzed
-    `thr` float[0,1]: threshold
-    `random_state` int: random seed
-    
-    Return:
-    `FPR, FNR`: array
-    
-    """
-    
-    assert idc in np.unique(y)
-    
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tss, random_state=random_state)
-    model.fit(X_train, y_train)
-    predicted = (model.predict_proba(X_test)[:, idc] > thr)
-    expected = y_test == idc
-    
-    cm = confusion_matrix(expected, predicted)
-
-    return [1 - (cm[j, j]/sum(cm[j, :])) for j in range(len(cm))]
+        return np.array([sea_fpr_res, nosea_fnr_res])
