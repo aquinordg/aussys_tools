@@ -53,8 +53,9 @@ Duração da missão em segundos.
 **captures_per_second**: _int_<br/>
 Número de capturas por segundo.
 
-**sea_nosea_ratio**: _float in range [0.0, 1.0]_<br/>
-Relação ‘sea/no sea’.
+**n_sea_exp**: _int_<br/>
+Número esperado de imagens 'sea' para 1 'nosea'.
+Ex.: 1(nosea):n_sea_exp.
 
 **print_mode**: _bool_<br/>
 Relatório em tela (True) ou valores diretos (False).
@@ -105,8 +106,9 @@ Duração da missão em segundos.
 **captures_per_second**: _int_<br/>
 Número de capturas por segundo.
 
-**sea_nosea_ratio**: _float in range [0.0, 1.0]_<br/>
-Relação ‘sea/no sea’.
+**n_sea_exp**: _int_<br/>
+Número esperado de imagens 'sea' para 1 'nosea'.
+Ex.: 1(nosea):n_sea_exp.
 
 **sen**: _float in range [0.0, 1.0]_<br/>
 Sensibilidade, diretamente proporcional à precisão do método e tempo de processamento.
