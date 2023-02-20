@@ -93,16 +93,16 @@ def get_rates_b_thres(predict_proba, expected, rate_type, ref):
     `threshold` float: new value of threshold
     
     """
-    for threshold in np.arange(1, 0, -10**(-2)):
+    for threshold in np.arange(0, 1, 10**(-2)):
         predicted = (predict_proba > threshold)
         cm = confusion_matrix(expected, predicted)
         FPR_t = round(1 - (cm[0, 0]/sum(cm[0, :])), 2)
         FNR_t = round(1 - (cm[1, 1]/sum(cm[1, :])), 2)
         
-        if (rate_type == "FPR") and (FPR_t >= ref):
+        if (rate_type == "FPR") and (FPR_t <= ref):
             break
             
-        if (rate_type == "FNR") and (FNR_t <= ref):
+        if (rate_type == "FNR") and (FNR_t >= ref):
             break
     
     return FPR_t, FNR_t, threshold
