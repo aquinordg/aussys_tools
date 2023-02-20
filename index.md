@@ -14,7 +14,7 @@ pip install git+https://github.com/aquinordg/mltools.git
 
 ### Relatório baseado em limiar de probabilidade
 
-Esta função informa a quantidade de imagens 'no sea' identificadas de forma equivocadas e despercebidas, dado determinado limiar de probabilidade estabelecido como parâmetro. Para isso, a função utiliza uma matriz de probabilidade de pertencimento e os valores esperados, dada determinada classe, além de algumas informações da missão. Os resultados podem ser mostrados por relatório impresso em tela ou adquiridos de forma direta. 
+<div style="text-align: justify"> Esta função informa a quantidade de imagens 'no sea' identificadas de forma equivocadas e despercebidas, dado determinado limiar de probabilidade estabelecido como parâmetro. Para isso, a função utiliza uma matriz de probabilidade de pertencimento e os valores esperados, dada determinada classe, além de algumas informações da missão. Os resultados podem ser mostrados por relatório impresso em tela ou adquiridos de forma direta. </div>
 
 #### Chamada
 
@@ -70,7 +70,7 @@ Total de imagens 'no sea' que deverão passar despercebidas.
 
 ### Relatório baseado na quantidade de imagens
 
-Esta função informa quantidades atualizadas de imagens 'nosea' identificadas de forma equivocada ou passadas despercebidas consideradas aceitáveis e o limiar adequado, conforme a entrada escolhida. Assim como a função anterior, é utilizada a matriz de probabilidade de pertencimento e os valores esperados, dada determinada classe, além de algumas informações da missão. O método encontra o novo limiar por meio de uma busca gulosa em todos os cenários possíveis a partir de um parâmetro sensibilidade. Os resultados podem ser mostrados por relatório impresso em tela ou adquiridos de forma direta.
+<div style="text-align: justify"> Esta função informa quantidades atualizadas de imagens 'nosea' identificadas de forma equivocada ou passadas despercebidas consideradas aceitáveis e o limiar adequado, conforme a entrada escolhida. Assim como a função anterior, é utilizada a matriz de probabilidade de pertencimento e os valores esperados, dada determinada classe, além de algumas informações da missão. O método encontra o novo limiar por meio de uma busca gulosa em todos os cenários possíveis a partir de um parâmetro sensibilidade. Os resultados podem ser mostrados por relatório impresso em tela ou adquiridos de forma direta. </div>
 
 #### Chamada
 
