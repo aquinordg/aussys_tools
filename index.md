@@ -2,7 +2,7 @@
 
 Python package [mltools](https://github.com/aquinordg/mltools): Machine Learning Tools.
 
-Essa ferramenta auxilia a análise e tomada de decisão em cenários de classificação binária, especialmente em aplicações de detecção de objetos a deriva no mar.
+<div style="text-align: justify"> Essa ferramenta auxilia a análise e tomada de decisão em cenários de classificação binária, especialmente em aplicações de detecção de objetos a deriva no mar. </div>
 
 ## Instalação
 
