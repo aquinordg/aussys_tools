@@ -38,35 +38,35 @@ aussys_rb_thres(predict_proba,
 
 #### Parâmetros
 
-**predict_proba**: _array-like of float in range [0.0, 1.0] and shape m_<br/>
-Probabilidades dos exemplos pertencerem à classe alvo.
+* **predict_proba**: _array-like of float in range [0.0, 1.0] and shape m_<br/>
+> Probabilidades dos exemplos pertencerem à classe alvo.
 
-**expected**: _array-like of bool and shape m_<br/>
-Vetor booleano de dimensão m: classes esperadas de cada um dos exemplos.
+* **expected**: _array-like of bool and shape m_<br/>
+> Vetor booleano de dimensão m: classes esperadas de cada um dos exemplos.
 
-**mission_duration**: _int_<br/>
-Duração da missão em segundos.
+* **mission_duration**: _int_<br/>
+> Duração da missão em segundos.
 
-**captures_per_second**: _int_<br/>
-Número de capturas por segundo.
+* **captures_per_second**: _int_<br/>
+> Número de capturas por segundo.
 
-**n_sea_exp**: _int_<br/>
-Número esperado de imagens 'sea' para 1 'nosea'.
-Ex.: 1(nosea):n_sea_exp.
+* **n_sea_exp**: _int_<br/>
+> Número esperado de imagens 'sea' para 1 'nosea'. <br/>
+> **Ex.:** 1('nosea') : _n_sea_exp_.
 
-**threshold**: _float in range [0.0, 1.0]_<br/>
-Limiar de probabilidade de pertencimento definido pelo usuário.
+* **threshold**: _float in range [0.0, 1.0]_<br/>
+> Limiar de probabilidade de pertencimento definido pelo usuário.
 
-**print_mode**: _bool_<br/>
-Relatório em tela (True) ou valores diretos (False).
+* **print_mode**: _bool_<br/>
+> Relatório em tela (True) ou valores diretos (False).
 
 #### _Retornos_
 
-**sea_fpr**: _int_<br/>
-Quantidade de imagens 'no sea' identificadas de forma equivocada.
+* **sea_fpr**: _int_<br/>
+> Quantidade de imagens 'no sea' identificadas de forma equivocada.
 
-**nosea_fnr**: _int_<br/>
-Total de imagens 'no sea' que deverão passar despercebidas.
+* **nosea_fnr**: _int_<br/>
+> Total de imagens 'no sea' que deverão passar despercebidas.
 
 ### Relatório baseado na quantidade de imagens
 
