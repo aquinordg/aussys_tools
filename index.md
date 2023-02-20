@@ -28,10 +28,10 @@ from mltools import aussys_rb_thres
 
 aussys_rb_thres(predict_proba,
                 expected,
-                threshold,
                 mission_duration,
                 captures_per_second,
-                sea_nosea_ratio,
+                n_sea_exp,
+                threshold,
                 print_mode=True)
 
 ```
@@ -44,9 +44,6 @@ Probabilidades dos exemplos pertencerem à classe alvo.
 **expected**: _array-like of bool and shape m_<br/>
 Vetor booleano de dimensão m: classes esperadas de cada um dos exemplos.
 
-**threshold**: _float in range [0.0, 1.0]_<br/>
-Limiar de probabilidade de pertencimento definido pelo usuário.
-
 **mission_duration**: _int_<br/>
 Duração da missão em segundos.
 
@@ -56,6 +53,9 @@ Número de capturas por segundo.
 **n_sea_exp**: _int_<br/>
 Número esperado de imagens 'sea' para 1 'nosea'.
 Ex.: 1(nosea):n_sea_exp.
+
+**threshold**: _float in range [0.0, 1.0]_<br/>
+Limiar de probabilidade de pertencimento definido pelo usuário.
 
 **print_mode**: _bool_<br/>
 Relatório em tela (True) ou valores diretos (False).
@@ -85,8 +85,7 @@ aussys_rb_images(predict_proba,
                  expected,
                  mission_duration,
                  captures_per_second,
-                 sea_nosea_ratio,
-                 sen,
+                 n_sea_exp,
                  sea_fpr=None,
                  nosea_fnr=None,
                  print_mode=True)
