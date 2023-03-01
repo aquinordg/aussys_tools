@@ -109,9 +109,6 @@ aussys_rb_images(predict_proba,
 > Número esperado de imagens 'sea' para 1 'nosea'. <br/>
 > **Ex.:** 1('nosea') : _n_sea_exp_.
 
-* **sen**: _float in range [0.0, 1.0]_<br/>
-> Sensibilidade, diretamente proporcional à precisão do método e tempo de processamento.
-
 * **sea_fpr**: _int_<br/>
 > Quantidade de imagens ‘no sea’ em que é aceitável serem identificadas de forma equivocada.
 
