@@ -19,7 +19,7 @@ def threshold_analysis(predict_proba, expected, threshold):
     """
 
     predicted = (predict_proba > threshold)
-    tn, fp, fn, tp = confusion_matrix(expected, predicted)
+    tn, fp, fn, tp = confusion_matrix(expected, predicted).ravel()
 
     FPR = fp / (fp + tn)
     FNR = fn / (fn + tp)
@@ -131,7 +131,7 @@ def tolerance_analysis(predict_proba, expected, positive_priori, fp_tolerance=No
         assert fn_tolerance is None
         for threshold in np.sort(np.unique(predict_proba)):
 
-            tn, fp, fn, tp = confusion_matrix(expected, predict_proba > threshold)
+            tn, fp, fn, tp = confusion_matrix(expected, predict_proba > threshold).ravel()
             FPR = fp / (fp + tn)
             FNR = fn / (fn + tp)
 
@@ -142,7 +142,7 @@ def tolerance_analysis(predict_proba, expected, positive_priori, fp_tolerance=No
         assert fp_tolerance is None
         for threshold in -np.sort(-np.unique(predict_proba)):
 
-            tn, fp, fn, tp = confusion_matrix(expected, predict_proba > threshold)
+            tn, fp, fn, tp = confusion_matrix(expected, predict_proba > threshold).ravel()
             FPR = fp / (fp + tn)
             FNR = fn / (fn + tp)
 
