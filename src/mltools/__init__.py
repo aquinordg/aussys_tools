@@ -132,7 +132,7 @@ def tolerance_analysis(predict_proba, expected, fpr_tolerance=None, fnr_toleranc
             FPR, FNR = threshold_analysis(predict_proba, expected, threshold)
             if FPR <= fpr_tolerance:
                 return FPR, FNR, threshold
-            return 0, 1, 1
+        return 0, 1, 1
 
     if fnr_tolerance is not None:
         assert fpr_tolerance is None
@@ -140,7 +140,7 @@ def tolerance_analysis(predict_proba, expected, fpr_tolerance=None, fnr_toleranc
             FPR, FNR = threshold_analysis(predict_proba, expected, threshold)
             if FNR <= fnr_tolerance:
                 return FPR, FNR, threshold
-            return 1, 0, 0
+        return 1, 0, 0
 
 def aussys_rb_images(predict_proba, expected, mission_duration, captures_per_second, n_sea_exp, sea_fpr=None, nosea_fnr=None, print_mode=True):
     """
