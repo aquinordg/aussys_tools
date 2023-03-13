@@ -129,14 +129,14 @@ def tolerance_analysis(predict_proba, expected, fpr_tolerance=None, fnr_toleranc
     if fpr_tolerance is not None:
         assert fnr_tolerance is None
         for threshold in np.sort(np.unique(predict_proba)):
-            FPR, FNR = threshold_analysis(expected, predict_proba, threshold)
+            FPR, FNR = threshold_analysis(predict_proba, expected, threshold)
             if FPR <= fpr_tolerance:
                 return FPR, FNR, threshold
 
     if fnr_tolerance is not None:
         assert fpr_tolerance is None
         for threshold in -np.sort(-np.unique(predict_proba)):
-            FPR, FNR = threshold_analysis(expected, predict_proba, threshold)
+            FPR, FNR = threshold_analysis(predict_proba, expected, threshold)
             if FNR <= fnr_tolerance:
                 return FPR, FNR, threshold
 
