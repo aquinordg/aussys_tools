@@ -112,42 +112,33 @@ def ratio2priori(positive_count=1, negative_count=1):
     return positive_count / (positive_count + negative_count)
 
 
-def tolerance_analysis(predict_proba, expected, positive_priori, fp_tolerance=None, fn_tolerance=None):
+def tolerance_analysis(predict_proba, expected, fpr_tolerance=None, fnr_tolerance=None):
     """
     Parameters:
     `predict_proba` float array(m): probability of belonging to target class
     `expected` boolean array(m): state of target class to label
-    `positive_priori` float: probability of finding a positive sample in real-world situation
-    `fp_tolerance` (or `fn_tolerance`) float: tolerance on the amount of false
+    `fpr_tolerance` (or `fnr_tolerance`) float: tolerance on the amount of false
             positives (negatives) in the real-world. The amount is given in
             terms of proportions on the events observed, independently on the
             class.
 
     Return:
-    `fp, fn, thr` array: expected number of observations in each category, and
+    `fpr, fnr, thr` array: expected number of observations in each category, and
             suggested threshold.
     """
-    if fp_tolerance is not None:
-        assert fn_tolerance is None
+    if fpr_tolerance is not None:
+        assert fnr_tolerance is None
         for threshold in np.sort(np.unique(predict_proba)):
+            FPR, FNR = threshold_analysis(expected, predict_proba, threshold)
+            if FPR <= fpr_tolerance:
+                return FPR, FNR, threshold
 
-            tn, fp, fn, tp = confusion_matrix(expected, predict_proba > threshold).ravel()
-            FPR = fp / (fp + tn)
-            FNR = fn / (fn + tp)
-
-            if FPR * (1 - positive_priori) <= fp_tolerance:
-                return FPR * (1 - positive_priori), FNR * positive_priori, threshold
-
-    if fn_tolerance is not None:
-        assert fp_tolerance is None
+    if fnr_tolerance is not None:
+        assert fpr_tolerance is None
         for threshold in -np.sort(-np.unique(predict_proba)):
-
-            tn, fp, fn, tp = confusion_matrix(expected, predict_proba > threshold).ravel()
-            FPR = fp / (fp + tn)
-            FNR = fn / (fn + tp)
-
-            if FNR * positive_priori <= fn_tolerance:
-                return FPR * (1 - positive_priori), FNR * positive_priori, threshold
+            FPR, FNR = threshold_analysis(expected, predict_proba, threshold)
+            if FNR <= fnr_tolerance:
+                return FPR, FNR, threshold
 
 def aussys_rb_images(predict_proba, expected, mission_duration, captures_per_second, n_sea_exp, sea_fpr=None, nosea_fnr=None, print_mode=True):
     """
