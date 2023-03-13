@@ -138,7 +138,7 @@ def tolerance_analysis(predict_proba, expected, positive_priori, fp_tolerance=No
             if FPR * (1 - positive_priori) <= fp_tolerance:
                 return fp_tolerance, FNR * positive_priori, threshold
 
-    if fn_tolerance is not None
+    if fn_tolerance is not None:
         assert fp_tolerance is None
         for threshold in -np.sort(-np.unique(predict_proba)):
 
