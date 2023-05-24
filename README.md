@@ -8,7 +8,7 @@ Python package [mltools](https://github.com/aquinordg/mltools): Machine Learning
 
 ### Probability threshold based report
 
-<div style="text-align: justify"> Esta função informa a quantidade de imagens 'no sea' identificadas de forma equivocadas e despercebidas, dado determinado limiar de probabilidade estabelecido como parâmetro. Para isso, a função utiliza uma matriz de probabilidade de pertencimento e os valores esperados, dada determinada classe, além de algumas informações da missão. Os resultados podem ser mostrados por relatório impresso em tela ou adquiridos de forma direta. </div>
+<div style="text-align: justify"> This function informs the amount of 'no sea' images identified in a mistaken and unnoticed way, given a certain threshold of probability established as a parameter. For this, the function uses a membership probability matrix and expected values, given a given class, in addition to some mission information. The results can be shown by a report printed on screen or acquired directly. </div>
 
 ```markdown
 
