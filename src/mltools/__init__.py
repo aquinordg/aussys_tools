@@ -56,8 +56,8 @@ def aussys_rb_thres(predict_proba, expected, mission_duration, captures_per_seco
 
     """
     ratio = n_sea_exp/(n_sea_exp + 1)
-    sea_image_exp = (1 - ratio) * (mission_duration * captures_per_second)
-    nosea_image_exp =  ratio * (mission_duration * captures_per_second)
+    sea_image_exp = ratio * (mission_duration * captures_per_second)
+    nosea_image_exp = (1 - ratio) * (mission_duration * captures_per_second)
 
     FPR, FNR = threshold_analysis(predict_proba, expected, threshold)
 
