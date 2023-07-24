@@ -1,6 +1,6 @@
-# Package mltools
+# Package [aussys_tools](https://github.com/aquinordg/aussys_tools)
 
-Python package [mltools](https://github.com/aquinordg/mltools): Machine Learning Tools.
+Autonomous Search System Tools
 
 <div style="text-align: justify"> This tool assists in the analysis and decision making in binary classification scenarios, mainly in applications for detecting drifting objects at sea. </div>
 
