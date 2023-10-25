@@ -287,7 +287,7 @@ def plot_result_metrics(data, thresholds, title=''):
 
 
 
-def compare_results(data, metrics, title = ''):
+def compare_results(data, thresholds, metrics, title = ''):
     title_plot = title.split('&')
     fig, ax = plt.subplots()
     fig.set_size_inches(10, 5)
