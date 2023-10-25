@@ -202,3 +202,264 @@ def aussys_rb_images(predict_proba, expected, mission_duration, captures_per_sec
 
     if (sea_fpr is not None) and (nosea_fnr is not None) and (print_mode==False):
         return np.array([sea_fpr_res, nosea_fnr_res])
+
+
+### GENERAL TOOLS ###
+
+import shutil
+import os
+import re
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+import splitfolders
+
+from IPython.display import display
+from matplotlib import pyplot as plt
+from glob import glob
+from json import dumps, loads
+
+from tensorflow import expand_dims
+from tensorflow.keras import preprocessing, models
+
+from sklearn.metrics import classification_report
+from sklearn.metrics import f1_score
+
+from aussys_tools import aussys_rb_thres, aussys_rb_images, tolerance_analysis, ratio2priori
+
+plt.style.use('fivethirtyeight')
+
+import warnings
+warnings.filterwarnings("ignore")
+
+
+
+def run_analisys_metrics(data):
+    reports = dict(model=list(), dataset=list(), folder=list(), threshold=list(), accuracy=list(),
+                   f1_score=list(), precision_nil=list(), precision_pod=list(), recall_nil=list(), recall_pod=list())
+
+    for _, row in data.iterrows():
+        expected = np.array(loads(row['expected']))
+        predicted_proba = np.array(loads(row['predicted']))
+
+        for threshold in thresholds:
+            reports['model'].append(row['model'])
+            reports['dataset'].append(row['dataset'])
+            reports['folder'].append(row['folder'])
+            reports['threshold'].append(threshold)
+
+            predicted = (predicted_proba > threshold)
+            cr = classification_report(expected, predicted, target_names=['nil', 'pod'], output_dict=True)
+
+            reports['accuracy'].append(cr['accuracy'])
+            reports['f1_score'].append(round(f1_score(expected, predicted), 1))
+            reports['precision_nil'].append(cr['nil']['precision'])
+            reports['precision_pod'].append(cr['pod']['precision'])
+            reports['recall_nil'].append(cr['nil']['recall'])
+            reports['recall_pod'].append(cr['pod']['recall'])
+
+    report = pd.DataFrame(reports)
+    return report
+
+
+
+def plot_result_metrics(data, title=''):
+    title_plot = title.split('&')
+
+    metrics = ['accuracy', 'precision_nil', 'precision_pod', 'recall_nil', 'recall_pod', 'f1_score']
+
+    fig, ax = plt.subplots()
+    fig.set_size_inches(28, 7)
+    fig.suptitle(f"MODEL: {title_plot[0]} BENCHMARK: {title_plot[1]}", fontsize=20)
+
+    for i in range(len(metrics)):
+        data_box = []
+        for threshold in thresholds:
+            data_metric = data[(data['threshold'] == threshold)]
+            data_box.append(data_metric[metrics[i]])
+
+        plt.subplot(1, 6, i + 1)
+        plt.title(metrics[i])
+        plt.boxplot(data_box, labels=thresholds, showfliers=False)
+        plt.ylim(0.0, 1.1)
+
+    plt.savefig(f"metrics/{title.replace('&', '_')}.png", format='png', bbox_inches='tight')
+
+
+
+def compare_results(data, metrics, title = ''):
+    title_plot = title.split('&')
+    fig, ax = plt.subplots()
+    fig.set_size_inches(10, 5)
+    fig.suptitle(f"MODEL: {title_plot[0]} BENCHMARK: {title_plot[1]}", fontsize=12)
+
+    for i in range(len(metrics)):
+        data_box = []
+        for threshold in thresholds:
+            data_metric = data[(data['threshold'] == threshold)]
+            data_box.append(data_metric[metrics[i]])
+
+        plt.subplot(1, len(metrics), i + 1)
+        plt.title(metrics[i], fontsize=12)
+        plt.boxplot(data_box, labels=thresholds, showfliers=False)
+        plt.ylim(0.0, 1.1)
+
+    plt.savefig(f"tradeoffs/{title.replace('&', '_')}.png", format='png', bbox_inches='tight')
+
+
+
+def run_analisys(data):
+    reports = dict(model=list(), dataset=list(), folder=list(), goal=list(),
+                   goal_type=list(), fpr=list(), fnr=list(), thr=list())
+
+    for _, row in data.iterrows():
+        expected = np.array(loads(row['expected']))
+        predicted_proba = np.array(loads(row['predicted']))
+
+        for goal in [0.1, 0.2, 0.3]:
+            for goal_type in ["fpr", "fnr"]:
+                reports['model'].append(row['model'])
+                reports['dataset'].append(row['dataset'])
+                reports['folder'].append(row['folder'])
+                reports['goal'].append(goal)
+                reports['goal_type'].append(goal_type)
+
+                if goal_type == 'fpr':
+                    fpr, fnr, thr = tolerance_analysis(predicted_proba, expected, fpr_tolerance=goal)
+                else:
+                    fpr, fnr, thr = tolerance_analysis(predicted_proba, expected, fnr_tolerance=goal)
+                reports['fpr'].append(fpr)
+                reports['fnr'].append(fnr)
+                reports['thr'].append(thr)
+
+    report = pd.DataFrame(reports)
+    return report
+
+
+
+def false_rate(expected, predicted_proba, limiar):
+  predicted = (predicted_proba > limiar)
+  TP = np.sum(predicted & expected)
+  TN = np.sum(~predicted & ~expected)
+  FP = np.sum(predicted & ~expected)
+  FN = np.sum(~predicted & expected)
+  fnr = FN / (FN + TP)
+  fpr = FP / (FP + TN)
+  return fnr, fpr
+
+
+
+def ROC_DET_val(data):
+  roc_det = dict(model=list(), fpr=list(), fnr=list())
+
+  for _, row in data.iterrows():
+    false_neg, false_pos = [],[]
+    expected = np.array(loads(row['expected']))
+    predicted_proba = np.array(loads(row['predicted']))
+
+    for limiar in list_thr:
+      fnr, fpr = false_rate(expected, predicted_proba, limiar)
+      false_neg.append(fnr)
+      false_pos.append(fpr)
+
+    roc_det['model'].append(row['model'])
+    roc_det['fpr'].append(false_pos)
+    roc_det['fnr'].append(false_neg)
+
+  roc_det = pd.DataFrame(roc_det)
+  return roc_det
+
+
+
+def mean_std(data):
+  results = dict(fpr_mean=list(), fpr_std=list(), fnr_mean=list(), fnr_std=list())
+  for i in range(len(data['fpr'][0])):
+    fnr, fpr = [],[]
+    for j in range(len(data)):
+      fnr.append(data['fnr'][j][i])
+      fpr.append(data['fpr'][j][i])
+
+    results['fpr_mean'].append(np.mean(fpr))
+    results['fpr_std'].append(np.std(fpr))
+    results['fnr_mean'].append(np.mean(fnr))
+    results['fnr_std'].append(np.std(fnr))
+
+  results = pd.DataFrame(results)
+  return results
+
+
+
+def plot_false_rates(df, max = 0.3, title=''):
+  data = mean_std(df)
+  index = []
+  for i in range(len(list_thr)):
+    if data['fpr_mean'][i] <= max and data['fnr_mean'][i] <= max:
+      index.append(i)
+
+  x0     = [list_thr[x] for x in index]
+  Y1     = pd.Series([data['fpr_mean'][x] for x in index])
+  Y1_std = pd.Series([data['fpr_std'][x] for x in index])
+  Y2     = pd.Series([data['fnr_mean'][x] for x in index])
+  Y2_std = pd.Series([data['fnr_std'][x] for x in index])
+
+  plt.figure(figsize=(8,4))
+  plt.rc('font', size=10)
+  title_plot = title.split('&')
+  plt.title(f"MODEL: {title_plot[0]} BENCHMARK: {title_plot[1]}", fontsize=12)
+  plt.plot(x0, Y1, 'r-', linewidth='1', label = 'False positive rate')
+  plt.fill_between(x0, Y1 - Y1_std, Y1 + Y1_std, color='r', alpha=0.2)
+  plt.plot(x0, Y2, 'b-', linewidth='1', label = 'False negative rate')
+  plt.fill_between(x0, Y2 - Y2_std, Y2 + Y2_std, color='b', alpha=0.2)
+  plt.xlabel("Threshold", fontsize=12)
+  plt.ylim(0.0, 1.0)
+  plt.legend()
+  plt.show
+
+
+
+def predict(model, dataset, image_size: tuple = (64, 64), color_mode: str = 'grayscale'):
+    nil = glob(f'{dataset}/test/nil/*.jpg')
+    pod = glob(f'{dataset}/test/pod/*.jpg')
+
+    X_test = nil + pod
+    y_test = [ 0 for _ in range(len(nil)) ] + [ 1 for _ in range(len(pod)) ]
+    y_pred = []
+    y_pred_proba = []
+
+    # predict dataset test
+    for i in range(len(X_test)):
+        path_image = X_test[i]
+
+        image = preprocessing.image.load_img(path_image, color_mode=color_mode, target_size=image_size)
+        image = preprocessing.image.img_to_array(image) / 255
+        image = expand_dims(image, 0)
+
+        prediction = model.predict(image, verbose=0)
+        y_pred_proba.append(prediction[:, 1][0])
+        y_pred.append(prediction.argmax(axis=1)[0])
+
+    return y_test, y_pred, y_pred_proba
+
+
+
+def predict_model(model: str, dataset: str, image_size: tuple = (64, 64), color_mode: str = 'grayscale'):
+    model_name = model.split('/')[-1]
+    dataset_name = dataset.split('/')[-1]
+
+    model = models.load_model(model)
+
+    name_file = f"/content/results/results_{model_name}&{dataset_name}.csv"
+    with open(name_file, 'w') as writer:
+        writer.write('model;dataset;folder;expected;predicted\n')
+
+    for i in range(10):
+        path = f'{dataset}/split_{i+1:02}'
+
+        print(f'-> Predicting split_{i+1:02} ...')
+        y_test, y_pred, y_pred_proba = predict(model, path)
+
+        with open(name_file, 'a') as writer:
+            writer.write(f'{model_name};{dataset_name};{i+1:02};{dumps(str(y_test))};{dumps(str(y_pred_proba))}\n')
+
+        #os.system(f'rm -R {path}')
+
