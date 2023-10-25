@@ -263,7 +263,7 @@ def run_analisys_metrics(data, thresholds):
 
 
 
-def plot_result_metrics(data, title=''):
+def plot_result_metrics(data, thresholds, title=''):
     title_plot = title.split('&')
 
     metrics = ['accuracy', 'precision_nil', 'precision_pod', 'recall_nil', 'recall_pod', 'f1_score']
