@@ -234,7 +234,7 @@ warnings.filterwarnings("ignore")
 
 
 
-def run_analisys_metrics(data):
+def run_analisys_metrics(data, thresholds):
     reports = dict(model=list(), dataset=list(), folder=list(), threshold=list(), accuracy=list(),
                    f1_score=list(), precision_nil=list(), precision_pod=list(), recall_nil=list(), recall_pod=list())
 
