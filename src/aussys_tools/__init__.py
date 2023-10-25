@@ -349,7 +349,7 @@ def false_rate(expected, predicted_proba, limiar):
 
 
 
-def ROC_DET_val(data):
+def ROC_DET_val(data, list_thr):
   roc_det = dict(model=list(), fpr=list(), fnr=list())
 
   for _, row in data.iterrows():
@@ -389,7 +389,7 @@ def mean_std(data):
 
 
 
-def plot_false_rates(df, max = 0.3, title=''):
+def plot_false_rates(df, list_thr, max = 0.3, title=''):
   data = mean_std(df)
   index = []
   for i in range(len(list_thr)):
