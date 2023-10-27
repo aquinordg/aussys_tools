@@ -2,6 +2,39 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 
+
+
+
+import shutil
+import os
+import re
+#import numpy as np
+import pandas as pd
+import tensorflow as tf
+import splitfolders
+
+from IPython.display import display
+from matplotlib import pyplot as plt
+from glob import glob
+from json import dumps, loads
+
+from tensorflow import expand_dims
+from tensorflow.keras import preprocessing, models
+
+from sklearn.metrics import classification_report
+from sklearn.metrics import f1_score
+
+#from aussys_tools import aussys_rb_thres, aussys_rb_images, tolerance_analysis, ratio2priori
+
+plt.style.use('fivethirtyeight')
+
+import warnings
+warnings.filterwarnings("ignore")
+
+
+
+
+
 def threshold_analysis(predict_proba, expected, threshold):
     """
 
@@ -205,34 +238,6 @@ def aussys_rb_images(predict_proba, expected, mission_duration, captures_per_sec
 
 
 ### GENERAL TOOLS ###
-
-import shutil
-import os
-import re
-import numpy as np
-import pandas as pd
-import tensorflow as tf
-import splitfolders
-
-from IPython.display import display
-from matplotlib import pyplot as plt
-from glob import glob
-from json import dumps, loads
-
-from tensorflow import expand_dims
-from tensorflow.keras import preprocessing, models
-
-from sklearn.metrics import classification_report
-from sklearn.metrics import f1_score
-
-from aussys_tools import aussys_rb_thres, aussys_rb_images, tolerance_analysis, ratio2priori
-
-plt.style.use('fivethirtyeight')
-
-import warnings
-warnings.filterwarnings("ignore")
-
-
 
 def run_analisys_metrics(data, thresholds):
     reports = dict(model=list(), dataset=list(), folder=list(), threshold=list(), accuracy=list(),
