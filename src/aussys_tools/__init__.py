@@ -2,11 +2,11 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 
-
-
-
-import shutil
 import os
+import requests
+import io
+import zipfile
+import shutil
 import re
 #import numpy as np
 import pandas as pd
@@ -30,10 +30,6 @@ plt.style.use('fivethirtyeight')
 
 import warnings
 warnings.filterwarnings("ignore")
-
-
-
-
 
 def threshold_analysis(predict_proba, expected, threshold):
     """
@@ -468,3 +464,36 @@ def predict_model(model: str, dataset: str, image_size: tuple = (64, 64), color_
 
         #os.system(f'rm -R {path}')
 
+### API REQUESTS ###
+
+def get_status(base_url):
+    s = requests.get(f'{base_url}/state')
+    state = s.json()
+    print('MODELS:', state['MODELS'])
+    print('BENCHMARKS:', state['BENCHMARKS'])
+
+def upload_models(base_url, path):
+    file = {'file': open(path, 'rb')}    
+    response = requests.post(f'{base_url}/upload_model', files=file)
+    message = response.json()
+    print(message['msg'])
+
+def upload_benchmarks(base_url, path):
+    file = {'file': open(path, 'rb')}
+    response = requests.post(f'{base_url}/upload_benchmarks', files=file)
+    message = response.json()
+    print(message['msg'])
+
+def run_predictions(base_url, model, scenery):
+    params = {'scenery': scenery, 'model': model}
+    response = requests.post(f'{base_url}/run_predictions', params=params)
+    message = response.json()
+    print(message['msg'])
+    
+def download_results(base_url):
+    results = requests.post(f'{base_url}/download_results')
+    if not os.path.isdir('results_from_API'): 
+        os.mkdir('results_from_API')
+    
+    z = zipfile.ZipFile(io.BytesIO(results.content))
+    z.extractall('results_from_API')
