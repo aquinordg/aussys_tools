@@ -471,6 +471,7 @@ def get_status(base_url):
     state = s.json()
     print('MODELS:', state['MODELS'])
     print('BENCHMARKS:', state['BENCHMARKS'])
+    print('RESULTS:', state['RESULTS'])
 
 def upload_models(base_url, path):
     file = {'file': open(path, 'rb')}    
