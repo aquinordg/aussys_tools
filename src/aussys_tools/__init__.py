@@ -470,7 +470,7 @@ def get_status(base_url):
     s = requests.get(f'{base_url}/state')
     state = s.json()
     print('MODELS:', state['MODELS'])
-    print('BENCHMARKS:', state['BENCHMARKS'])
+    print('SCENARIOS:', state['SCENARIOS'])
     print('RESULTS:', state['RESULTS'])
 
 def upload_models(base_url, path):
