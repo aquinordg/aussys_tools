@@ -237,7 +237,7 @@ def aussys_rb_images(predict_proba, expected, mission_duration, captures_per_sec
 ### GENERAL TOOLS ###
 
 def run_analisys_metrics(data, thresholds):
-    reports = dict(model=list(), dataset=list(), folder=list(), threshold=list(), accuracy=list(),
+    reports = dict(model=list(), dataset=list(), fold=list(), threshold=list(), accuracy=list(),
                    f1_score=list(), precision_nil=list(), precision_pod=list(), recall_nil=list(), recall_pod=list())
 
     for _, row in data.iterrows():
@@ -247,7 +247,7 @@ def run_analisys_metrics(data, thresholds):
         for threshold in thresholds:
             reports['model'].append(row['model'])
             reports['dataset'].append(row['dataset'])
-            reports['folder'].append(row['folder'])
+            reports['fold'].append(row['fold'])
             reports['threshold'].append(threshold)
 
             predicted = (predicted_proba > threshold)
@@ -272,7 +272,7 @@ def plot_result_metrics(data, thresholds, title=''):
 
     fig, ax = plt.subplots()
     fig.set_size_inches(28, 7)
-    fig.suptitle(f"MODEL: {title_plot[0]} BENCHMARK: {title_plot[1]}", fontsize=20)
+    fig.suptitle(f"MODEL: {title_plot[0]} SCENERY: {title_plot[1]}", fontsize=20)
 
     for i in range(len(metrics)):
         data_box = []
@@ -293,7 +293,7 @@ def compare_results(data, thresholds, metrics, title = ''):
     title_plot = title.split('&')
     fig, ax = plt.subplots()
     fig.set_size_inches(10, 5)
-    fig.suptitle(f"MODEL: {title_plot[0]} BENCHMARK: {title_plot[1]}", fontsize=12)
+    fig.suptitle(f"MODEL: {title_plot[0]} SCENERY: {title_plot[1]}", fontsize=12)
 
     for i in range(len(metrics)):
         data_box = []
@@ -311,7 +311,7 @@ def compare_results(data, thresholds, metrics, title = ''):
 
 
 def run_analisys(data):
-    reports = dict(model=list(), dataset=list(), folder=list(), goal=list(),
+    reports = dict(model=list(), dataset=list(), fold=list(), goal=list(),
                    goal_type=list(), fpr=list(), fnr=list(), thr=list())
 
     for _, row in data.iterrows():
@@ -322,7 +322,7 @@ def run_analisys(data):
             for goal_type in ["fpr", "fnr"]:
                 reports['model'].append(row['model'])
                 reports['dataset'].append(row['dataset'])
-                reports['folder'].append(row['folder'])
+                reports['fold'].append(row['fold'])
                 reports['goal'].append(goal)
                 reports['goal_type'].append(goal_type)
 
@@ -407,7 +407,7 @@ def plot_false_rates(df, list_thr, max = 0.3, title=''):
   plt.figure(figsize=(8,4))
   plt.rc('font', size=10)
   title_plot = title.split('&')
-  plt.title(f"MODEL: {title_plot[0]} BENCHMARK: {title_plot[1]}", fontsize=12)
+  plt.title(f"MODEL: {title_plot[0]} SCENERY: {title_plot[1]}", fontsize=12)
   plt.plot(x0, Y1, 'r-', linewidth='1', label = 'False positive rate')
   plt.fill_between(x0, Y1 - Y1_std, Y1 + Y1_std, color='r', alpha=0.2)
   plt.plot(x0, Y2, 'b-', linewidth='1', label = 'False negative rate')
@@ -499,5 +499,7 @@ def download_results(model, scenery, base_url = 'http://127.0.0.1:8000'):
     response_decoded = response.content.decode('utf-8')
     csv_file = csv.reader(io.StringIO(response_decoded))
     df = pd.DataFrame(csv_file)
+    df = df.rename(columns=df.iloc[0]).drop(df.index[0])
+    df = df.astype({'fold':'int','expected':'int','predicted':'float'})
 
-    return df.rename(columns=df.iloc[0]).drop(df.index[0])
+    return df
