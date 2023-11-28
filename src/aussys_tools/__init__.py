@@ -365,7 +365,7 @@ def ROC_DET_val(data):
             false_neg.append(fnr)
             false_pos.append(fpr)
 
-        roc_det['model'].append(row['model'])
+        roc_det['model'].append(data['model'].sample().values[0])
         roc_det['fpr'].append(false_pos)
         roc_det['fnr'].append(false_neg)
 
