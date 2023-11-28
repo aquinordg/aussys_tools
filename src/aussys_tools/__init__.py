@@ -31,6 +31,7 @@ plt.style.use('fivethirtyeight')
 
 import warnings
 warnings.filterwarnings("ignore")
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 def threshold_analysis(predict_proba, expected, threshold):
     """
