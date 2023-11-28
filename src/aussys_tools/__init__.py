@@ -235,7 +235,7 @@ def aussys_rb_images(predict_proba, expected, mission_duration, captures_per_sec
 
 ### GENERAL TOOLS ###
 
-def run_analisys_metrics(data, thresholds):
+def run_analisys_metrics(data, thresholds = [ .25, 0.5, 0.75 ]):
     reports = dict(model=list(), dataset=list(), fold=list(), threshold=list(), accuracy=list(),
                    f1_score=list(), precision_nil=list(), precision_pod=list(), recall_nil=list(), recall_pod=list())
     
@@ -289,7 +289,7 @@ def run_analisys(data):
     report = pd.DataFrame(reports)
     return report
 
-def plot_result_metrics(data, thresholds, title=''):
+def plot_result_metrics(data, title='', thresholds = [ .25, 0.5, 0.75 ]):
     if not os.path.isdir('metrics'):
         os.mkdir('metrics')
     
@@ -314,7 +314,7 @@ def plot_result_metrics(data, thresholds, title=''):
 
     plt.savefig(f"metrics/{title.replace('&', '_')}.png", format='png', bbox_inches='tight')
 
-def compare_results(data, thresholds, metrics, title = ''):
+def compare_results(data, metrics, title = '', thresholds = [ .25, 0.5, 0.75 ]):
     if not os.path.isdir('tradeoffs'):
         os.mkdir('tradeoffs')
     
@@ -346,7 +346,9 @@ def false_rate(expected, predicted_proba, limiar):
   fpr = FP / (FP + TN)
   return fnr, fpr
 
-def ROC_DET_val(data, list_thr):
+def ROC_DET_val(data):
+    list_thr = np.arange(0, 1, 0.005).tolist()
+
     roc_det = dict(model=list(), fpr=list(), fnr=list())
 
     for fold in range(data.fold.min(), data.fold.max()+1):
@@ -382,7 +384,8 @@ def mean_std(data):
   results = pd.DataFrame(results)
   return results
 
-def plot_false_rates(df, list_thr, max = 0.3, title=''):
+def plot_false_rates(df, max = 0.3, title=''):
+    list_thr = np.arange(0, 1, 0.005).tolist()
     data = mean_std(df)
     index = []
     for i in range(len(list_thr)):
