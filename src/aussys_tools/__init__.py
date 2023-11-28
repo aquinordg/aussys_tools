@@ -289,17 +289,15 @@ def run_analisys(data):
     report = pd.DataFrame(reports)
     return report
 
-def plot_result_metrics(data, title='', thresholds = [ .25, 0.5, 0.75 ]):
+def plot_result_metrics(data, thresholds = [ .25, 0.5, 0.75 ]):
     if not os.path.isdir('metrics'):
         os.mkdir('metrics')
     
-    title_plot = title.split('&')
-
     metrics = ['accuracy', 'precision_nil', 'precision_pod', 'recall_nil', 'recall_pod', 'f1_score']
 
     fig, ax = plt.subplots()
     fig.set_size_inches(28, 7)
-    fig.suptitle(f"MODEL: {title_plot[0]} SCENERY: {title_plot[1]}", fontsize=20)
+    fig.suptitle(f"MODEL: {data['model'].sample().values[0]} SCENERY: {data['dataset'].sample().values[0]}", fontsize=20)
 
     for i in range(len(metrics)):
         data_box = []
@@ -314,14 +312,13 @@ def plot_result_metrics(data, title='', thresholds = [ .25, 0.5, 0.75 ]):
 
     plt.savefig(f"metrics/{title.replace('&', '_')}.png", format='png', bbox_inches='tight')
 
-def compare_results(data, metrics, title = '', thresholds = [ .25, 0.5, 0.75 ]):
+def compare_results(data, metrics, thresholds = [ .25, 0.5, 0.75 ]):
     if not os.path.isdir('tradeoffs'):
         os.mkdir('tradeoffs')
     
-    title_plot = title.split('&')
     fig, ax = plt.subplots()
     fig.set_size_inches(10, 5)
-    fig.suptitle(f"MODEL: {title_plot[0]} SCENERY: {title_plot[1]}", fontsize=12)
+    fig.suptitle(f"MODEL: {data['model'].sample().values[0]} SCENERY: {data['dataset'].sample().values[0]}", fontsize=12)
 
     for i in range(len(metrics)):
         data_box = []
@@ -337,14 +334,14 @@ def compare_results(data, metrics, title = '', thresholds = [ .25, 0.5, 0.75 ]):
     plt.savefig(f"tradeoffs/{title.replace('&', '_')}.png", format='png', bbox_inches='tight')
 
 def false_rate(expected, predicted_proba, limiar):
-  predicted = (predicted_proba > limiar)
-  TP = np.sum(predicted & expected)
-  TN = np.sum(~predicted & ~expected)
-  FP = np.sum(predicted & ~expected)
-  FN = np.sum(~predicted & expected)
-  fnr = FN / (FN + TP)
-  fpr = FP / (FP + TN)
-  return fnr, fpr
+    predicted = (predicted_proba > limiar)
+    TP = np.sum(predicted & expected)
+    TN = np.sum(~predicted & ~expected)
+    FP = np.sum(predicted & ~expected)
+    FN = np.sum(~predicted & expected)
+    fnr = FN / (FN + TP)
+    fpr = FP / (FP + TN)
+    return fnr, fpr
 
 def ROC_DET_val(data):
     list_thr = np.arange(0, 1, 0.005).tolist()
@@ -384,7 +381,7 @@ def mean_std(data):
   results = pd.DataFrame(results)
   return results
 
-def plot_false_rates(df, max = 0.3, title=''):
+def plot_false_rates(df, max = 1):
     list_thr = np.arange(0, 1, 0.005).tolist()
     data = mean_std(df)
     index = []
@@ -400,8 +397,7 @@ def plot_false_rates(df, max = 0.3, title=''):
 
     plt.figure(figsize=(8,4))
     plt.rc('font', size=10)
-    title_plot = title.split('&')
-    plt.title(f"MODEL: {title_plot[0]} SCENERY: {title_plot[1]}", fontsize=12)
+    plt.title(f"MODEL: {df['model'].sample().values[0]} SCENERY: {df['dataset'].sample().values[0]}", fontsize=12)
     plt.plot(x0, Y1, 'r-', linewidth='1', label = 'False positive rate')
     plt.fill_between(x0, Y1 - Y1_std, Y1 + Y1_std, color='r', alpha=0.2)
     plt.plot(x0, Y2, 'b-', linewidth='1', label = 'False negative rate')
@@ -490,3 +486,6 @@ def download_results(model, scenery, base_url = 'http://127.0.0.1:8000'):
     df = df.astype({'fold':'int','expected':'int','predicted':'float'})
 
     return df
+
+### REPORT ###
+
