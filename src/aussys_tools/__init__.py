@@ -480,9 +480,9 @@ def upload_models(path, base_url = 'http://127.0.0.1:8000'):
     message = response.json()
     print(message['msg'])
 
-def upload_benchmarks(path, base_url = 'http://127.0.0.1:8000'):
+def upload_scenarios(path, base_url = 'http://127.0.0.1:8000'):
     file = {'file': open(path, 'rb')}
-    response = requests.post(f'{base_url}/upload_benchmarks', files=file)
+    response = requests.post(f'{base_url}/upload_scenarios', files=file)
     message = response.json()
     print(message['msg'])
 
