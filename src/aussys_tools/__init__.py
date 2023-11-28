@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 
+import csv
 import os
 import requests
 import io
@@ -466,6 +467,8 @@ def predict_model(model: str, dataset: str, image_size: tuple = (64, 64), color_
 
 ### API REQUESTS ###
 
+base_url = 'http://127.0.0.1:8000'
+
 def get_status(base_url):
     s = requests.get(f'{base_url}/state')
     state = s.json()
@@ -491,10 +494,12 @@ def run_predictions(base_url, model, scenery):
     message = response.json()
     print(message['msg'])
     
-def download_results(base_url):
-    results = requests.post(f'{base_url}/download_results')
-    if not os.path.isdir('results_from_API'): 
-        os.mkdir('results_from_API')
-    
-    z = zipfile.ZipFile(io.BytesIO(results.content))
-    z.extractall('results_from_API')
+def download_results(base_url, model, scenery):
+    params = {'scenery': scenery, 'model': model}
+    response = requests.post(f'{base_url}/download_results', params=params)
+
+    response_decoded = response.content.decode('utf-8')
+    csv_file = csv.reader(io.StringIO(response_decoded))
+    df = pd.DataFrame(csv_file)
+
+    return df.rename(columns=df.iloc[0]).drop(df.index[0])
