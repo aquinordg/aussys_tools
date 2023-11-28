@@ -293,12 +293,15 @@ def run_analisys(data):
 def plot_result_metrics(data, thresholds = [ .25, 0.5, 0.75 ]):
     if not os.path.isdir('metrics'):
         os.mkdir('metrics')
+
+    model_name = data['model'].sample().values[0]
+    scenery = data['dataset'].sample().values[0]
     
     metrics = ['accuracy', 'precision_nil', 'precision_pod', 'recall_nil', 'recall_pod', 'f1_score']
 
     fig, ax = plt.subplots()
     fig.set_size_inches(28, 7)
-    fig.suptitle(f"MODEL: {data['model'].sample().values[0]} SCENERY: {data['dataset'].sample().values[0]}", fontsize=20)
+    fig.suptitle(f"MODEL: {model_name} SCENERY: {scenery}", fontsize=20)
 
     for i in range(len(metrics)):
         data_box = []
@@ -311,15 +314,18 @@ def plot_result_metrics(data, thresholds = [ .25, 0.5, 0.75 ]):
         plt.boxplot(data_box, labels=thresholds, showfliers=False)
         plt.ylim(0.0, 1.1)
 
-    plt.savefig(f"metrics/{title.replace('&', '_')}.png", format='png', bbox_inches='tight')
+    plt.savefig(f"metrics/{model_name}_{scenery}.png", format='png', bbox_inches='tight')
 
 def compare_results(data, metrics, thresholds = [ .25, 0.5, 0.75 ]):
     if not os.path.isdir('tradeoffs'):
         os.mkdir('tradeoffs')
+
+    model_name = data['model'].sample().values[0]
+    scenery = data['dataset'].sample().values[0]
     
     fig, ax = plt.subplots()
     fig.set_size_inches(10, 5)
-    fig.suptitle(f"MODEL: {data['model'].sample().values[0]} SCENERY: {data['dataset'].sample().values[0]}", fontsize=12)
+    fig.suptitle(f"MODEL: {model_name} SCENERY: {scenery}", fontsize=12)
 
     for i in range(len(metrics)):
         data_box = []
@@ -332,7 +338,7 @@ def compare_results(data, metrics, thresholds = [ .25, 0.5, 0.75 ]):
         plt.boxplot(data_box, labels=thresholds, showfliers=False)
         plt.ylim(0.0, 1.1)
 
-    plt.savefig(f"tradeoffs/{title.replace('&', '_')}.png", format='png', bbox_inches='tight')
+    plt.savefig(f"tradeoffs/{model_name}_{scenery}.png", format='png', bbox_inches='tight')
 
 def false_rate(expected, predicted_proba, limiar):
     predicted = (predicted_proba > limiar)
@@ -384,6 +390,10 @@ def mean_std(data):
 
 def plot_false_rates(df, max = 1):
     list_thr = np.arange(0, 1, 0.005).tolist()
+
+    model_name = data['model'].sample().values[0]
+    scenery = data['dataset'].sample().values[0]
+
     data = mean_std(df)
     index = []
     for i in range(len(list_thr)):
@@ -398,7 +408,7 @@ def plot_false_rates(df, max = 1):
 
     plt.figure(figsize=(8,4))
     plt.rc('font', size=10)
-    plt.title(f"MODEL: {df['model'].sample().values[0]} SCENERY: {df['dataset'].sample().values[0]}", fontsize=12)
+    plt.title(f"MODEL: {model_name} SCENERY: {scenery}", fontsize=12)
     plt.plot(x0, Y1, 'r-', linewidth='1', label = 'False positive rate')
     plt.fill_between(x0, Y1 - Y1_std, Y1 + Y1_std, color='r', alpha=0.2)
     plt.plot(x0, Y2, 'b-', linewidth='1', label = 'False negative rate')
@@ -408,46 +418,66 @@ def plot_false_rates(df, max = 1):
     plt.legend()
     plt.show
 
-def predict(model, dataset, image_size: tuple = (64, 64), color_mode: str = 'grayscale'):
-    nil = glob(f'{dataset}/test/nil/*.jpg')
-    pod = glob(f'{dataset}/test/pod/*.jpg')
+def predict(model, dataset, image_size):
+    nil = glob(f'{dataset}/test/NIL/*.jpg')
+    pod = glob(f'{dataset}/test/POD/*.jpg')
 
     X_test = nil + pod
     y_test = [ 0 for _ in range(len(nil)) ] + [ 1 for _ in range(len(pod)) ]
     y_pred = []
     y_pred_proba = []
 
+    # predict dataset test
+    id = []
     for i in range(len(X_test)):
         path_image = X_test[i]
+        id.append(path_image.split('/')[-1])
 
-        image = preprocessing.image.load_img(path_image, color_mode=color_mode, target_size=image_size)
-        image = preprocessing.image.img_to_array(image) / 255
+        if len(image_size) == 2: image = preprocessing.image.load_img(path_image, target_size=image_size, color_mode="grayscale")
+        else: image = preprocessing.image.load_img(path_image, target_size=image_size)
         image = expand_dims(image, 0)
 
         prediction = model.predict(image, verbose=0)
         y_pred_proba.append(prediction[:, 1][0])
         y_pred.append(prediction.argmax(axis=1)[0])
 
-    return y_test, y_pred, y_pred_proba
+    return id, y_test, y_pred, y_pred_proba
 
-def predict_model(model: str, dataset: str, image_size: tuple = (64, 64), color_mode: str = 'grayscale'):
-    model_name = model.split('/')[-1]
+def predict_model(model: str, dataset: str):
+    """
+    Generate the results for a single model in a specific dataset.
+    Saves the result in a CSV file.
+    """
+
+    model_path = model.split('.zip')[0]
+    with zipfile.ZipFile(model, 'r') as zip_ref:
+        zip_ref.extractall(model_path)
+    f = open(model_path+'/metadata.json')
+    data = json.load(f)
+    f.close()
+
+    model_name   = model_path.split('/')[-1]
     dataset_name = dataset.split('/')[-1]
 
-    model = models.load_model(model)
+    model = models.load_model(model_path+'/model', custom_objects={'fbeta': fbeta})
 
-    name_file = f"/content/results/results_{model_name}&{dataset_name}.csv"
-    with open(name_file, 'w') as writer:
-        writer.write('model;dataset;folder;expected;predicted\n')
-
+    results = pd.DataFrame()
     for i in range(10):
+        res_aux = pd.DataFrame()
         path = f'{dataset}/split_{i+1:02}'
+        id, y_test, y_pred, y_pred_proba = predict(model, path, image_size = eval(data['model_input']))
 
-        print(f'-> Predicting split_{i+1:02} ...')
-        y_test, y_pred, y_pred_proba = predict(model, path)
+        res_aux = pd.DataFrame({'id': id,
+                                'model': model_name,
+                                'dataset': dataset_name,
+                                'fold': i+1,
+                                'expected': y_test,
+                                'predicted': y_pred_proba})
 
-        with open(name_file, 'a') as writer:
-            writer.write(f'{model_name};{dataset_name};{i+1:02};{dumps(str(y_test))};{dumps(str(y_pred_proba))}\n')
+        results = pd.concat([results, res_aux], ignore_index=True)
+
+    results.to_csv(f'results/results_{model_name}&{dataset_name}.csv', index = False)
+    shutil.rmtree(model_path)
 
 ### API REQUESTS ###
 
