@@ -391,8 +391,8 @@ def mean_std(data):
 def plot_false_rates(df, max = 1):
     list_thr = np.arange(0, 1, 0.005).tolist()
 
-    model_name = data['model'].sample().values[0]
-    scenery = data['dataset'].sample().values[0]
+    model_name = df['model'].sample().values[0]
+    scenery = df['dataset'].sample().values[0]
 
     data = mean_std(df)
     index = []
