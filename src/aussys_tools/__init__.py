@@ -233,39 +233,66 @@ def aussys_rb_images(predict_proba, expected, mission_duration, captures_per_sec
     if (sea_fpr is not None) and (nosea_fnr is not None) and (print_mode==False):
         return np.array([sea_fpr_res, nosea_fnr_res])
 
-
 ### GENERAL TOOLS ###
 
 def run_analisys_metrics(data, thresholds):
     reports = dict(model=list(), dataset=list(), fold=list(), threshold=list(), accuracy=list(),
                    f1_score=list(), precision_nil=list(), precision_pod=list(), recall_nil=list(), recall_pod=list())
-
-    for _, row in data.iterrows():
-        expected = np.array(loads(row['expected']))
-        predicted_proba = np.array(loads(row['predicted']))
-
+    
+    for fold in range(data.fold.min(), data.fold.max()+1):
+        expected = np.array(data[data.fold == fold]['expected'])
+        predicted_proba = np.array(data[data.fold == fold]['predicted'])
+    
         for threshold in thresholds:
-            reports['model'].append(row['model'])
-            reports['dataset'].append(row['dataset'])
-            reports['fold'].append(row['fold'])
+            reports['model'].append(data[data.fold == fold]['model'].sample().values[0])
+            reports['dataset'].append(data[data.fold == fold]['dataset'].sample().values[0])
+            reports['fold'].append(fold)
             reports['threshold'].append(threshold)
-
+    
             predicted = (predicted_proba > threshold)
             cr = classification_report(expected, predicted, target_names=['nil', 'pod'], output_dict=True)
-
+    
             reports['accuracy'].append(cr['accuracy'])
             reports['f1_score'].append(round(f1_score(expected, predicted), 1))
             reports['precision_nil'].append(cr['nil']['precision'])
             reports['precision_pod'].append(cr['pod']['precision'])
             reports['recall_nil'].append(cr['nil']['recall'])
             reports['recall_pod'].append(cr['pod']['recall'])
+    
+    report = pd.DataFrame(reports)
+    return report
+
+def run_analisys(data):
+    reports = dict(model=list(), dataset=list(), fold=list(), goal=list(),
+                   goal_type=list(), fpr=list(), fnr=list(), thr=list())
+
+    for fold in range(data.fold.min(), data.fold.max()+1):
+        expected = np.array(data[data.fold == fold]['expected'])
+        predicted_proba = np.array(data[data.fold == fold]['predicted'])
+
+        for goal in [0.1, 0.2, 0.3]:
+            for goal_type in ["fpr", "fnr"]:
+                reports['model'].append(data[data.fold == fold]['model'].sample().values[0])
+                reports['dataset'].append(data[data.fold == fold]['dataset'].sample().values[0])
+                reports['fold'].append(fold)
+                reports['goal'].append(goal)
+                reports['goal_type'].append(goal_type)
+
+                if goal_type == 'fpr':
+                    fpr, fnr, thr = tolerance_analysis(predicted_proba, expected, fpr_tolerance=goal)
+                else:
+                    fpr, fnr, thr = tolerance_analysis(predicted_proba, expected, fnr_tolerance=goal)
+                reports['fpr'].append(fpr)
+                reports['fnr'].append(fnr)
+                reports['thr'].append(thr)
 
     report = pd.DataFrame(reports)
     return report
 
-
-
 def plot_result_metrics(data, thresholds, title=''):
+    if not os.path.isdir('metrics'):
+        os.mkdir('metrics')
+    
     title_plot = title.split('&')
 
     metrics = ['accuracy', 'precision_nil', 'precision_pod', 'recall_nil', 'recall_pod', 'f1_score']
@@ -287,9 +314,10 @@ def plot_result_metrics(data, thresholds, title=''):
 
     plt.savefig(f"metrics/{title.replace('&', '_')}.png", format='png', bbox_inches='tight')
 
-
-
 def compare_results(data, thresholds, metrics, title = ''):
+    if not os.path.isdir('tradeoffs'):
+        os.mkdir('tradeoffs')
+    
     title_plot = title.split('&')
     fig, ax = plt.subplots()
     fig.set_size_inches(10, 5)
@@ -308,37 +336,6 @@ def compare_results(data, thresholds, metrics, title = ''):
 
     plt.savefig(f"tradeoffs/{title.replace('&', '_')}.png", format='png', bbox_inches='tight')
 
-
-
-def run_analisys(data):
-    reports = dict(model=list(), dataset=list(), fold=list(), goal=list(),
-                   goal_type=list(), fpr=list(), fnr=list(), thr=list())
-
-    for _, row in data.iterrows():
-        expected = np.array(loads(row['expected']))
-        predicted_proba = np.array(loads(row['predicted']))
-
-        for goal in [0.1, 0.2, 0.3]:
-            for goal_type in ["fpr", "fnr"]:
-                reports['model'].append(row['model'])
-                reports['dataset'].append(row['dataset'])
-                reports['fold'].append(row['fold'])
-                reports['goal'].append(goal)
-                reports['goal_type'].append(goal_type)
-
-                if goal_type == 'fpr':
-                    fpr, fnr, thr = tolerance_analysis(predicted_proba, expected, fpr_tolerance=goal)
-                else:
-                    fpr, fnr, thr = tolerance_analysis(predicted_proba, expected, fnr_tolerance=goal)
-                reports['fpr'].append(fpr)
-                reports['fnr'].append(fnr)
-                reports['thr'].append(thr)
-
-    report = pd.DataFrame(reports)
-    return report
-
-
-
 def false_rate(expected, predicted_proba, limiar):
   predicted = (predicted_proba > limiar)
   TP = np.sum(predicted & expected)
@@ -349,29 +346,25 @@ def false_rate(expected, predicted_proba, limiar):
   fpr = FP / (FP + TN)
   return fnr, fpr
 
-
-
 def ROC_DET_val(data, list_thr):
-  roc_det = dict(model=list(), fpr=list(), fnr=list())
+    roc_det = dict(model=list(), fpr=list(), fnr=list())
 
-  for _, row in data.iterrows():
-    false_neg, false_pos = [],[]
-    expected = np.array(loads(row['expected']))
-    predicted_proba = np.array(loads(row['predicted']))
+    for fold in range(data.fold.min(), data.fold.max()+1):
+        false_neg, false_pos = [],[]
+        expected = np.array(data[data.fold == fold]['expected'])
+        predicted_proba = np.array(data[data.fold == fold]['predicted'])
 
-    for limiar in list_thr:
-      fnr, fpr = false_rate(expected, predicted_proba, limiar)
-      false_neg.append(fnr)
-      false_pos.append(fpr)
+        for limiar in list_thr:
+            fnr, fpr = false_rate(expected, predicted_proba, limiar)
+            false_neg.append(fnr)
+            false_pos.append(fpr)
 
-    roc_det['model'].append(row['model'])
-    roc_det['fpr'].append(false_pos)
-    roc_det['fnr'].append(false_neg)
+        roc_det['model'].append(row['model'])
+        roc_det['fpr'].append(false_pos)
+        roc_det['fnr'].append(false_neg)
 
-  roc_det = pd.DataFrame(roc_det)
-  return roc_det
-
-
+    roc_det = pd.DataFrame(roc_det)
+    return roc_det
 
 def mean_std(data):
   results = dict(fpr_mean=list(), fpr_std=list(), fnr_mean=list(), fnr_std=list())
@@ -389,35 +382,31 @@ def mean_std(data):
   results = pd.DataFrame(results)
   return results
 
-
-
 def plot_false_rates(df, list_thr, max = 0.3, title=''):
-  data = mean_std(df)
-  index = []
-  for i in range(len(list_thr)):
-    if data['fpr_mean'][i] <= max and data['fnr_mean'][i] <= max:
-      index.append(i)
+    data = mean_std(df)
+    index = []
+    for i in range(len(list_thr)):
+        if data['fpr_mean'][i] <= max and data['fnr_mean'][i] <= max:
+            index.append(i)
 
-  x0     = [list_thr[x] for x in index]
-  Y1     = pd.Series([data['fpr_mean'][x] for x in index])
-  Y1_std = pd.Series([data['fpr_std'][x] for x in index])
-  Y2     = pd.Series([data['fnr_mean'][x] for x in index])
-  Y2_std = pd.Series([data['fnr_std'][x] for x in index])
+    x0     = [list_thr[x] for x in index]
+    Y1     = pd.Series([data['fpr_mean'][x] for x in index])
+    Y1_std = pd.Series([data['fpr_std'][x] for x in index])
+    Y2     = pd.Series([data['fnr_mean'][x] for x in index])
+    Y2_std = pd.Series([data['fnr_std'][x] for x in index])
 
-  plt.figure(figsize=(8,4))
-  plt.rc('font', size=10)
-  title_plot = title.split('&')
-  plt.title(f"MODEL: {title_plot[0]} SCENERY: {title_plot[1]}", fontsize=12)
-  plt.plot(x0, Y1, 'r-', linewidth='1', label = 'False positive rate')
-  plt.fill_between(x0, Y1 - Y1_std, Y1 + Y1_std, color='r', alpha=0.2)
-  plt.plot(x0, Y2, 'b-', linewidth='1', label = 'False negative rate')
-  plt.fill_between(x0, Y2 - Y2_std, Y2 + Y2_std, color='b', alpha=0.2)
-  plt.xlabel("Threshold", fontsize=12)
-  plt.ylim(0.0, 1.0)
-  plt.legend()
-  plt.show
-
-
+    plt.figure(figsize=(8,4))
+    plt.rc('font', size=10)
+    title_plot = title.split('&')
+    plt.title(f"MODEL: {title_plot[0]} SCENERY: {title_plot[1]}", fontsize=12)
+    plt.plot(x0, Y1, 'r-', linewidth='1', label = 'False positive rate')
+    plt.fill_between(x0, Y1 - Y1_std, Y1 + Y1_std, color='r', alpha=0.2)
+    plt.plot(x0, Y2, 'b-', linewidth='1', label = 'False negative rate')
+    plt.fill_between(x0, Y2 - Y2_std, Y2 + Y2_std, color='b', alpha=0.2)
+    plt.xlabel("Threshold", fontsize=12)
+    plt.ylim(0.0, 1.0)
+    plt.legend()
+    plt.show
 
 def predict(model, dataset, image_size: tuple = (64, 64), color_mode: str = 'grayscale'):
     nil = glob(f'{dataset}/test/nil/*.jpg')
@@ -428,7 +417,6 @@ def predict(model, dataset, image_size: tuple = (64, 64), color_mode: str = 'gra
     y_pred = []
     y_pred_proba = []
 
-    # predict dataset test
     for i in range(len(X_test)):
         path_image = X_test[i]
 
@@ -441,8 +429,6 @@ def predict(model, dataset, image_size: tuple = (64, 64), color_mode: str = 'gra
         y_pred.append(prediction.argmax(axis=1)[0])
 
     return y_test, y_pred, y_pred_proba
-
-
 
 def predict_model(model: str, dataset: str, image_size: tuple = (64, 64), color_mode: str = 'grayscale'):
     model_name = model.split('/')[-1]
@@ -462,8 +448,6 @@ def predict_model(model: str, dataset: str, image_size: tuple = (64, 64), color_
 
         with open(name_file, 'a') as writer:
             writer.write(f'{model_name};{dataset_name};{i+1:02};{dumps(str(y_test))};{dumps(str(y_pred_proba))}\n')
-
-        #os.system(f'rm -R {path}')
 
 ### API REQUESTS ###
 
