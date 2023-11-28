@@ -353,7 +353,7 @@ def false_rate(expected, predicted_proba, limiar):
 def ROC_DET_val(data):
     list_thr = np.arange(0, 1, 0.005).tolist()
 
-    roc_det = dict(model=list(), fpr=list(), fnr=list())
+    roc_det = dict(model=list(), dataset=list(), fpr=list(), fnr=list())
 
     for fold in range(data.fold.min(), data.fold.max()+1):
         false_neg, false_pos = [],[]
@@ -366,6 +366,7 @@ def ROC_DET_val(data):
             false_pos.append(fpr)
 
         roc_det['model'].append(data['model'].sample().values[0])
+        roc_det['dataset'].append(data['dataset'].sample().values[0])
         roc_det['fpr'].append(false_pos)
         roc_det['fnr'].append(false_neg)
 
@@ -520,3 +521,28 @@ def download_results(model, scenery, base_url = 'http://127.0.0.1:8000'):
 
 ### REPORT ###
 
+def full_report(data):
+    report_metrics = run_analisys_metrics(data)
+    plot_result_metrics(report_metrics)
+
+    ######################
+
+    report = run_analisys(data)
+    report.rename(columns={"goal": "Tolerância", "goal_type": "Métrica", "fpr": "FPR", "fnr": "FNR", "thr": "Threshold"}, inplace=True)
+    report['Métrica'].replace('fpr', 'FPR', inplace=True, regex=True)
+    report['Métrica'].replace('fnr', 'FNR', inplace=True, regex=True)
+    
+    report_fnr = report.drop(report[report['Métrica'] == 'FPR'].index)
+    report_fpr = report.drop(report[report['Métrica'] == 'FNR'].index)
+    report_fnr = report_fnr.groupby(['Tolerância', 'Métrica'])[['FPR', 'Threshold']].describe().loc[:,(slice(None),['mean', 'std'])].apply(lambda s: s.apply('{0:.2f}'.format))
+    report_fpr = report_fpr.groupby(['Tolerância', 'Métrica'])[['FNR', 'Threshold']].describe().loc[:,(slice(None),['mean', 'std'])].apply(lambda s: s.apply('{0:.2f}'.format))
+    
+    display(report_fnr)
+    print()
+    display(report_fpr)
+    print()
+
+    ######################
+
+    rates = ROC_DET_val(data)
+    plot_false_rates(rates)
