@@ -467,34 +467,32 @@ def predict_model(model: str, dataset: str, image_size: tuple = (64, 64), color_
 
 ### API REQUESTS ###
 
-base_url = 'http://127.0.0.1:8000'
-
-def get_status(base_url):
+def get_status(base_url = 'http://127.0.0.1:8000'):
     s = requests.get(f'{base_url}/state')
     state = s.json()
     print('MODELS:', state['MODELS'])
     print('SCENARIOS:', state['SCENARIOS'])
     print('RESULTS:', state['RESULTS'])
 
-def upload_models(base_url, path):
+def upload_models(path, base_url = 'http://127.0.0.1:8000'):
     file = {'file': open(path, 'rb')}    
     response = requests.post(f'{base_url}/upload_model', files=file)
     message = response.json()
     print(message['msg'])
 
-def upload_benchmarks(base_url, path):
+def upload_benchmarks(path, base_url = 'http://127.0.0.1:8000'):
     file = {'file': open(path, 'rb')}
     response = requests.post(f'{base_url}/upload_benchmarks', files=file)
     message = response.json()
     print(message['msg'])
 
-def run_predictions(base_url, model, scenery):
+def run_predictions(model, scenery, base_url = 'http://127.0.0.1:8000'):
     params = {'scenery': scenery, 'model': model}
     response = requests.post(f'{base_url}/run_predictions', params=params)
     message = response.json()
     print(message['msg'])
     
-def download_results(base_url, model, scenery):
+def download_results(model, scenery, base_url = 'http://127.0.0.1:8000'):
     params = {'scenery': scenery, 'model': model}
     response = requests.post(f'{base_url}/download_results', params=params)
 
