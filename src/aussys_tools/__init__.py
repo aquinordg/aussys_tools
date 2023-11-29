@@ -314,7 +314,7 @@ def plot_result_metrics(data, thresholds = [ .25, 0.5, 0.75 ]):
         plt.boxplot(data_box, labels=thresholds, showfliers=False)
         plt.ylim(0.0, 1.1)
 
-    plt.savefig(f"metrics/{model_name}_{scenery}.png", format='png', bbox_inches='tight')
+    plt.savefig(f"metrics/{model_name}_{scenery}_BP.png", format='png', bbox_inches='tight')
 
 def compare_results(data, metrics, thresholds = [ .25, 0.5, 0.75 ]):
     if not os.path.isdir('tradeoffs'):
@@ -418,6 +418,8 @@ def plot_false_rates(df, max = 1):
     plt.ylim(0.0, 1.0)
     plt.legend()
     plt.show
+
+    plt.savefig(f"metrics/{model_name}_{scenery}_FR.png", format='png', bbox_inches='tight')
 
 def predict(model, dataset, image_size):
     nil = glob(f'{dataset}/test/NIL/*.jpg')
