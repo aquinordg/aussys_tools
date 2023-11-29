@@ -325,7 +325,7 @@ def compare_results(data, metrics, thresholds = [ .25, 0.5, 0.75 ]):
     
     fig, ax = plt.subplots()
     fig.set_size_inches(10, 5)
-    fig.suptitle(f"MODEL: {model_name} SCENERY: {scenery}", fontsize=12)
+    fig.suptitle(f"MODEL: {model_name} | SCENERY: {scenery}", fontsize=12)
 
     for i in range(len(metrics)):
         data_box = []
@@ -409,7 +409,7 @@ def plot_false_rates(df, max = 1):
 
     plt.figure(figsize=(8,4))
     plt.rc('font', size=10)
-    plt.title(f"MODEL: {model_name} SCENERY: {scenery}", fontsize=12)
+    plt.title(f"MODEL: {model_name} | SCENERY: {scenery}", fontsize=12)
     plt.plot(x0, Y1, 'r-', linewidth='1', label = 'False positive rate')
     plt.fill_between(x0, Y1 - Y1_std, Y1 + Y1_std, color='r', alpha=0.2)
     plt.plot(x0, Y2, 'b-', linewidth='1', label = 'False negative rate')
