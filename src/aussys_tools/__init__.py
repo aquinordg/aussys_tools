@@ -510,14 +510,14 @@ def run_predictions(model, scenery, base_url = 'http://127.0.0.1:8000'):
 def download_results(model, scenery, base_url = 'http://127.0.0.1:8000'):
     params = {'scenery': scenery, 'model': model}
     response = requests.post(f'{base_url}/download_results', params=params)
+    response_decoded = response.content.decode('utf-8')
+    csv_file = csv.reader(io.StringIO(response_decoded))
+    df = pd.DataFrame(csv_file)
 
-    if response.json() is not None:
-        return print(response.json()['msg'])
-
+    if len(df) == 1:
+        return print(df[0][0])
+        
     else:
-        response_decoded = response.content.decode('utf-8')
-        csv_file = csv.reader(io.StringIO(response_decoded))
-        df = pd.DataFrame(csv_file)
         df = df.rename(columns=df.iloc[0]).drop(df.index[0])
         df = df.astype({'fold':'int','expected':'int','predicted':'float'})
         return df
