@@ -301,7 +301,7 @@ def plot_result_metrics(data, thresholds = [ .25, 0.5, 0.75 ]):
 
     fig, ax = plt.subplots()
     fig.set_size_inches(28, 7)
-    fig.suptitle(f"MODEL: {model_name} SCENERY: {scenery}", fontsize=20)
+    fig.suptitle(f"MODEL: {model_name} | SCENERY: {scenery}", fontsize=20)
 
     for i in range(len(metrics)):
         data_box = []
